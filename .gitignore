@@ -37,3 +37,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Build output
+dist/
+build/
