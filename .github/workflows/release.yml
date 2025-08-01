@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Run tests
+      run: go test -v
+    
+    - name: Build binaries
+      run: |
+        mkdir -p dist
+        
+        # Get version from tag
+        VERSION=${GITHUB_REF#refs/tags/}
+        BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        GIT_COMMIT=${GITHUB_SHA::7}
+        LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT}"
+        
+        # Build for different platforms
+        GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-linux-amd64 main.go
+        GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-linux-arm64 main.go
+        GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-windows-amd64.exe main.go
+        GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-darwin-amd64 main.go
+        GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-darwin-arm64 main.go
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/*
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
