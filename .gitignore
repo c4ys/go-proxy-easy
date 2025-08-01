@@ -29,10 +29,10 @@ go-proxy-easy
 ehthumbs.db
 Thumbs.db
 
+.vscode/settings.jsonsettings.json
+# IDE files (uncomment the .vscode/settings.json line if you don't want to share VS Code settings)
+# .vscode/settings.json
 .vscode/settings.json
-# IDE files (uncomment the .vscode/ line if you don't want to share VS Code settings)
-# .vscode/
-.vscode/
 .idea/
 *.swp
 *.swo
