@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -81,7 +85,7 @@ jobs:
           ./go-proxy-easy
           
           # 启用认证
-          ./go-proxy-easy -listen 0.0.0.0:8080 -user user -pass 123456
+          ./go-proxy-easy -listen 0.0.0.0:8080 -user admin -pass 123456
           ```
           
           ### 📦 下载
@@ -90,12 +94,15 @@ jobs:
           - **Windows**: `go-proxy-easy-windows-amd64.exe` (x86_64)
           - **macOS**: `go-proxy-easy-darwin-amd64` (Intel) 或 `go-proxy-easy-darwin-arm64` (Apple Silicon)
           
-          ### ✨ 新特性
+          ### ✨ 特性
           
-          - 重构 README，突出简单易用特性
-          - 优化文档结构和描述
-          - 改进用户体验
+          - ✨ 使用 Go 1.24 构建，性能优化
+          - 🔐 支持 Basic 认证
+          - 🌐 HTTP/HTTPS 代理支持
+          - 🪶 轻量级，无外部依赖
+          - ⚙️ 灵活的命令行配置
         draft: false
         prerelease: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
