@@ -10,38 +10,91 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.21'
+        check-latest: true
+    
+    - name: Verify Go installation
+      run: go version
     
     - name: Run tests
-      run: go test -v
+      run: go test -v ./...
     
     - name: Build binaries
       run: |
         mkdir -p dist
         
-        # Get version from tag
+        # Get version info
         VERSION=${GITHUB_REF#refs/tags/}
         BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
         GIT_COMMIT=${GITHUB_SHA::7}
-        LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT}"
+        
+        echo "Building version: $VERSION"
+        echo "Build time: $BUILD_TIME"
+        echo "Git commit: $GIT_COMMIT"
         
         # Build for different platforms
-        GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-linux-amd64 main.go
-        GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-linux-arm64 main.go
-        GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-windows-amd64.exe main.go
-        GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-darwin-amd64 main.go
-        GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o dist/go-proxy-easy-darwin-arm64 main.go
+        platforms=("linux/amd64" "linux/arm64" "windows/amd64" "darwin/amd64" "darwin/arm64")
+        
+        for platform in "${platforms[@]}"; do
+          IFS='/' read -r os arch <<< "$platform"
+          output_name="go-proxy-easy"
+          
+          if [ "$os" = "windows" ]; then
+            output_name="${output_name}.exe"
+          fi
+          
+          output_path="dist/${output_name//go-proxy-easy/go-proxy-easy-$os-$arch}"
+          if [ "$os" = "windows" ]; then
+            output_path="dist/go-proxy-easy-${os}-${arch}.exe"
+          else
+            output_path="dist/go-proxy-easy-${os}-${arch}"
+          fi
+          
+          echo "Building $os/$arch -> $output_path"
+          GOOS=$os GOARCH=$arch go build -o "$output_path" main.go
+        done
+        
+        echo "Build complete:"
+        ls -la dist/
     
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: dist/*
-        body_path: CHANGELOG.md
+        body: |
+          ## go-proxy-easy ${{ github.ref_name }}
+          
+          一个极简的 Go HTTP 代理服务器，一行命令即可启动！
+          
+          ### 🚀 快速开始
+          
+          下载适合您系统的版本，然后运行：
+          
+          ```bash
+          # 无需认证
+          ./go-proxy-easy
+          
+          # 启用认证
+          ./go-proxy-easy -listen 0.0.0.0:8080 -user admin -pass 123456
+          ```
+          
+          ### 📦 下载
+          
+          - **Linux**: `go-proxy-easy-linux-amd64` (x86_64) 或 `go-proxy-easy-linux-arm64` (ARM64)
+          - **Windows**: `go-proxy-easy-windows-amd64.exe` (x86_64)
+          - **macOS**: `go-proxy-easy-darwin-amd64` (Intel) 或 `go-proxy-easy-darwin-arm64` (Apple Silicon)
+          
+          ### ✨ 新特性
+          
+          - 重构 README，突出简单易用特性
+          - 优化文档结构和描述
+          - 改进用户体验
         draft: false
         prerelease: false
       env:
