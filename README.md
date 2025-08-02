@@ -11,7 +11,13 @@
 ./go-proxy-easy
 
 # 自定义端口和认证
-./go-proxy-easy -listen 0.0.0.0:8080 -user admin -pass 123456
+./go-proxy-easy -listen 0.0.0.0:8080 -user username -pass 123456
+
+# 使用示例(wget)
+http_proxy=http://username:123456@127.0.0.1:8080 wget http://httpbin.org/get
+
+# 使用示例(curl)
+http_proxy=http://username:123456@127.0.0.1:8080 curl https://httpbin.org/get
 ```
 
 **就这么简单！** 🎉
@@ -58,7 +64,7 @@ go build -o go-proxy-easy main.go
 
 **启用认证：**
 ```bash
-./go-proxy-easy -listen 127.0.0.1:8888 -user admin -pass secret
+./go-proxy-easy -listen 127.0.0.1:8888 -user test -pass secret
 ```
 
 **开发调试：**
